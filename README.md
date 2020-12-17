@@ -1,4 +1,4 @@
-### Hi there 👋
+Can be compiled with any c++17 compiler that supports filesystem.h. There shouldn't be any platform dependencies.
 
 <!--
 **Project0verflow/Project0verflow** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
