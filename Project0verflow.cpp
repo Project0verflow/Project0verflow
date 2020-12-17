@@ -312,7 +312,6 @@ int main(int argc, char *argv[])
 	}
 	if (argc==4 && argv[1][1]=='p' )//pack
 	{
-		cout << "in pack";
 		uint32_t offsetCounter = 0;
 		vector<entry> entries;
 		ofstream output(argv[3], fstream::binary);
@@ -345,7 +344,6 @@ int main(int argc, char *argv[])
 		int keyLength = 16;
 		for (int i = 0; i < packedEntries->size() - 4; i++)
 		{
-			cout << (int)packedEntries->at(i + 4) << " " << (int)key[(keyStartPos + i) % keyLength] << endl;
 			packedEntries->at(i + 4) ^= key[(keyStartPos + i) % keyLength];
 		}
 		for (unsigned char ch : *packedEntries)
@@ -406,7 +404,6 @@ int main(int argc, char *argv[])
 		wstring outputPath;
 		for (int i = 0; i < asize; i++)
 			outputPath += originalOutputPath[i];
-		wcout << outputPath << "_" << endl;
 		for (entry e : *entries)
 		{
 			ofstream out(outputPath + e.name, fstream::binary);
