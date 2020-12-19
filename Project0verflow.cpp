@@ -1,5 +1,5 @@
 //To do:
-//fix LZPack limits offset should be 0x7ff, size 62
+//fix LZPack possibly can be sized to 62
 
 #include <iostream>
 #include <string>
@@ -48,7 +48,7 @@ vector<unsigned char> * LZPack(unsigned char * data, int length)
 {
 	vector<unsigned char> * toReturn = new vector<unsigned char>();
 	
-	uint16_t currentPacketIndex = 0;
+	uint64_t currentPacketIndex = 0;
 	uint16_t currentUncompressedPacketSize = 0;
 	uint16_t currentMatchSize = 0;
 	uint32_t temp=length;
@@ -60,13 +60,13 @@ vector<unsigned char> * LZPack(unsigned char * data, int length)
 	}
 	for (int index = 0; index < length; index++)
 	{
-		for (int backtrackIndex = 1;  index - backtrackIndex >= 0 && backtrackIndex<0xff; backtrackIndex++)//do real math later to make sure it doesn't go past the max offset val
+		for (int backtrackIndex = 1;  index - backtrackIndex >= 0 && backtrackIndex<0x7ff; backtrackIndex++)//do real math later to make sure it doesn't go past the max offset val
 		{
 			if (data[index - backtrackIndex] == data[index])
 			{
 				for (int backtrackIndexSecondary = 1; index - backtrackIndex + backtrackIndexSecondary < index; backtrackIndexSecondary++)
 				{
-					if (data[index - backtrackIndex + backtrackIndexSecondary] != data[index + backtrackIndexSecondary]||backtrackIndexSecondary>30)//might be possible to bump this to 62
+					if (data[index - backtrackIndex + backtrackIndexSecondary] != data[index + backtrackIndexSecondary]||backtrackIndexSecondary>31)//might be possible to bump this to 62
 						break;
 					if (backtrackIndexSecondary % 2 == 1 && currentMatchSize<backtrackIndexSecondary)
 					{
@@ -186,7 +186,7 @@ void LzUnpack(unsigned char * input, unsigned char * output, int length, int inp
 	while (outputIndex < length)
 	{
 		char current = input[inputIndex++];
-		if ((current & 128) !=0 )//if >= 0x80
+		if ((current & 128) !=0 )
 		{
 			uint16_t num = (uint16_t) current;
 			num = num << 8;
@@ -303,13 +303,9 @@ vector<unsigned char> * serializeEntries(vector<entry>* toRead, uint32_t indexPo
 //exe -e file folder
 int main(int argc, char *argv[])
 {
+	//_getch();
 	unsigned char key[]{ 0x0f,0x25,0x3e,0x5c,0x2a,0x4b,0x77,0x90,0x05,0x8a,0x8e,0x46,0xeb,0x3d,0x11,0x43 };
 	unsigned char footer[]{ 0x5f,0x64,0x7d,0x17 };
-	if (argc != 4)
-	{
-		cout << "arguments are:" << endl << "Project0verflow.exe -pack folder_name output_name" << endl << "Project0verflow.exe -extract input_file output_folder";
-		return -1;
-	}
 	if (argc==4 && argv[1][1]=='p' )//pack
 	{
 		uint32_t offsetCounter = 0;
@@ -319,6 +315,10 @@ int main(int argc, char *argv[])
 		{
 			if (currentFile.is_regular_file() && filesystem::path(currentFile).filename()!="keyfile.bin")
 			{
+				if (filesystem::path(currentFile).filename() == "proro2.XML")
+				{
+					cout << "jdsaio";
+				}
 				entries.push_back({ (uint32_t)offsetCounter, filesystem::path(currentFile).filename(), true });
 				ifstream current(currentFile.path(), std::ifstream::ate | std::ifstream::binary);
 				streamsize size = current.tellg();
@@ -326,9 +326,9 @@ int main(int argc, char *argv[])
 				unsigned char* data = new unsigned char[size];
 				current.read((char*)data, size);//load file in
 				vector<unsigned char> * packedData = LZPack(data, size);
-				for (unsigned char ch : *packedData)
+				for (int i = 0; i < packedData->size(); i++)
 				{
-					output << ch;
+					output << packedData->at(i);
 					output.flush();
 					offsetCounter++;
 				}
@@ -431,6 +431,45 @@ int main(int argc, char *argv[])
 			out.flush();
 		}
 		out.close();
+		file.close();
+	}
+	else if (argc == 4 && argv[1][1] == 's')
+	{
+		int totalLines = 0;
+		ofstream output(argv[3], fstream::binary);
+		for (const auto & currentFile : filesystem::directory_iterator(argv[2]))
+		{
+			if (currentFile.is_regular_file() && filesystem::path(currentFile).filename() != "keyfile.bin")
+			{
+				ifstream reading(currentFile);
+				string currentLine;
+				bool isInresource = false;
+				while (getline(reading, currentLine))
+				{
+					if (currentLine.find("<RESOURCE no=") != string::npos)
+						isInresource = true;
+					else if (currentLine.find("</RESOURCE") != string::npos)
+						isInresource = false;
+					else if (currentLine.find("<CREATE type=\"STR\">") != string::npos && isInresource)
+					{
+						size_t start = currentLine.find(">") + 1;
+						size_t end = currentLine.find("</");
+						string s = currentLine.substr(start, end - start);
+						output << s << endl;
+						totalLines++;
+						isInresource = false;
+					}
+				}
+				reading.close();
+			}
+		}
+		output.close();
+		cout << "Total lines in game is: " << totalLines << endl;
+	}
+	else
+	{
+		cout << "arguments are:" << endl << "Project0verflow.exe -pack folder_name output_name" << endl << "Project0verflow.exe -extract input_file output_folder";
+		return -1;
 	}
 	cout << "done" << endl;
 }
