@@ -27,6 +27,8 @@ Can be compiled with any c++17 compiler that supports filesystem.h. There should
 Sister Princess games are unplanned, seem to be Tokimeki Memorial clones with nothing all that noteworty. Plenty of sister dating games exist so a chaste version isn't that interesting.... okay maybe a little bit. If you are a translator and want a game pushed thru the tooling process make an issue report. Currently focus is on (poorly) translating Summer Radish Vacation 1 and 2, then looking more into how Snow works. 
 
 Next planned update is confirming repacking.
+
+Special Thanks to [GARBro](https://github.com/morkt/GARbro) for putting together a tool that can unpack every game. I'm simply porting to c++ (for practice) and implementing packing.
 <!--
 **Project0verflow/Project0verflow** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
